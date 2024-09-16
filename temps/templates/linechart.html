@@ -11,7 +11,8 @@
         <canvas width="500" height="600" id="myChart"></canvas>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script type="text/javascript" src="% static 'canvas.js' %"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/1.30.1/date_fns.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
         <script type="text/javascript">
             $.get('{% url "line_chart_json" %}', function(data) {
                 var ctx = $("#myChart").get(0).getContext("2d");
@@ -21,9 +22,9 @@
                     options: {
                         scales:{
                             xAxis:{
-                                type:"time",
+                                type:"timeseries",
                                 time: {
-                                    unit: "hour"
+                                    unit: "minute"
                                 }
                             }
                         }
