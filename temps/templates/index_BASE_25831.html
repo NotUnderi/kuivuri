@@ -1,0 +1,18 @@
+{% load static %}
+
+<!DOCTYPE html>
+<http>
+<head>
+<title> Lämmöt</title>
+<meta charset="utf-8">
+<script src="{% static 'myfirst.js' %}"></script>
+
+</head>
+<body>
+<div> Lämmöt: {{temps.1.temp}} Aika : {{temps.0.time}}</div>
+
+
+<iframe width="600" height="400" src="{%url 'line_chart'%}""></iframe>
+</body>
+
+</http>

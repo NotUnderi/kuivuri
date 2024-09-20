@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 from chartjs.views.lines import BaseLineChartView
 
 def index(request):
-    temps = Temperature.objects.all()
+    temps = Temperature.objects.latest("time")
     return render (request,'index.html',{"temps":temps})
 
     
@@ -14,15 +14,15 @@ class TempJsonView(BaseLineChartView):
     def get_labels(self):
         l = []
         for i in Temperature.objects.values("time"):
-            l.append(i.get("time").strftime("%s"))
-        return l
+            l.append(i.get("time"))
+        return ["Temperature"]
     
     
     def get_data(self):
-        l = []
-        for i in Temperature.objects.values("temp"):
-            l.append(i)
-        return l
+        Temps = Temperature.objects.values("temp","time")
+        data = [{'x':x["time"], 'y':x["temp"]} for x in Temps]
+       
+        return data
 
 
 
