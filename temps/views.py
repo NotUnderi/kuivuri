@@ -2,9 +2,18 @@ from django.shortcuts import render
 from .models import Temperature
 from django.views.generic import TemplateView
 from chartjs.views.lines import BaseLineChartView
+import datetime
+from django.views.decorators.csrf import csrf_exempt
 
+
+
+@csrf_exempt
 def index(request):
     temps = Temperature.objects.latest("time")
+    if request.method == "POST":
+        print(request.POST.get("temp"))
+        data = Temperature(temp=float(request.POST.get("temp")),time=datetime.datetime.now())
+        data.save()
     return render (request,'index.html',{"temps":temps})
 
     

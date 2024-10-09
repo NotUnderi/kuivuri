@@ -1,4 +1,4 @@
-{% load static %}
+
 
 <!DOCTYPE html>
 <http>
@@ -19,8 +19,8 @@
                 <div class="card ">
                     <div class="card-body">
                         <h5 class="card-title">Viimeisin lämpötila</h5>
-                        <h6> Lämpötila: {{temps.temp}}</h6>
-                        <h6>Aika : {{temps.time}}</h6>
+                        <h6> Lämpötila: 132.2</h6>
+                        <h6>Aika : Oct. 9, 2024, 7:17 a.m.</h6>
                     </div>
                 </div>
             </div>
@@ -28,7 +28,7 @@
                 <div class="card mx-auto">
                     <div class="card-body">
                         <h5 class="card-title">Viimeisin x tuntia</h5>
-                        <iframe width="600" height="400" src="{%url 'line_chart'%}"></iframe>
+                        <iframe width="600" height="400" src="/chart"></iframe>
 
                     </div>
                 </div>
