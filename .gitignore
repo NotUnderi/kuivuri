@@ -1,5 +1,5 @@
 *.pdf
-ssid.h
+secret.h
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
