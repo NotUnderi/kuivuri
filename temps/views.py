@@ -10,12 +10,18 @@ from django.http import JsonResponse
 
 @csrf_exempt
 def index(request):
-    temps = Temperature.objects.latest("time")
+    sources = Temperature.objects.values_list('source', flat=True).distinct()
+    latest_temps = {}
+    for source in sources:
+        latest_temp = Temperature.objects.filter(source=source).order_by('-time').first()
+        if latest_temp:
+            latest_temps[source] = latest_temp
+
     if request.method == "POST":
         print(request.POST.get("temp"))
         data = Temperature(temp=float(request.POST.get("temp")),time=datetime.datetime.now(),source=request.POST.get("source"))
         data.save()
-    return render (request,'index.html',{"temps":temps})
+    return render(request, 'index.html', {'latest_temps': latest_temps})
 
     
 

@@ -18,8 +18,12 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Viimeisin lämpötila</h5>
-                        <h6>Lämpötila: <span id="latest-temp">{{ temps.temp }}</span></h6>
-                        <h6>Aika: <span id="latest-time">{{ temps.time|date:"H:i:s" }}</span></h6>
+                        {% for source, temp in latest_temps.items %}
+                            <h6>Lähde: {{ source }}</h6>
+                            <h3>Lämpötila: <span id="latest-temp-{{ source }}">{{ temp.temp }}</span></h3>
+                            <h6>Aika: <span id="latest-time-{{ source }}">{{ temp.time|date:"H:i:s" }}</span></h6>
+                            <hr>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
