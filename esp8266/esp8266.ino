@@ -1,7 +1,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
 #include "secret.h"
-#include <ArduioJson.h>
+#include <ArduinoJson.h>
 
 unsigned long lastTime = 0;
 unsigned long timerDelay = 5000;
