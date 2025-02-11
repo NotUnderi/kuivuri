@@ -1,11 +1,12 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
 #include "secret.h"
-
+#include <ArduioJson.h>
 
 unsigned long lastTime = 0;
 unsigned long timerDelay = 5000;
 long temp;
+JsonDocument doc;
 
 void setup() 
 {
@@ -26,6 +27,7 @@ void setup()
   Serial.println("Connection established!");  
   Serial.print("IP address:\t");
   Serial.println(WiFi.localIP());
+  
 }
   
 void loop() 
@@ -34,13 +36,17 @@ void loop()
   if ((millis() - lastTime) > timerDelay) {
     if(WiFi.status()== WL_CONNECTED){
       temp=random(25,70);
+      char jsonData;
+      doc["source"] = "ESP8266";
+      doc["temp"] = temp;
+      serializeJson(doc, jsonData);
+
       HTTPClient http;
-      WiFiClient client;      
+      WiFiClient client;     
       http.begin(client, serverIP);
         
-      http.addHeader("Content-Type", "text/html");
-      String httpRequestData = String("temp="+temp);           
-      int httpResponseCode = http.POST(httpRequestData);
+      http.addHeader("Content-Type", "text/json");
+      int httpResponseCode = http.POST(jsonData);
       
       // If you need an HTTP request with a content type: application/json, use the following:
       //http.addHeader("Content-Type", "application/json");
