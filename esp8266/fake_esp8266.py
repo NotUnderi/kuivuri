@@ -2,24 +2,41 @@
 import random
 import requests
 import time
+import hmac
+import hashlib
+import os
 
-url = "http://localhost:8000/"
+API_SECRET = os.getenv("API_SECRET")
+url = "http://localhost:8000/api/"
+
+def make_request(temp, source):
+    timestamp = str(int(time.time()))
+
+    message = f"{temp}:{source}:{timestamp}"
+    signature = hmac.new(
+        API_SECRET.encode(),
+        message.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    return {
+        "temp": temp,
+        "source": source,
+        "timestamp": timestamp,
+        "hash": signature
+    }
 
 while True:
-    temp_harri = round(random.uniform(10, 50), 1)
-    temp_esp8266 = round(random.uniform(10, 50), 1)
-    
-    data_harri = {"temp": temp_harri, "source": "harri"}  # Use lowercase 'source'
-    data_esp8266 = {"temp": temp_esp8266, "source": "esp8266"}  # Use lowercase 'source'
-    
     try:
-        x_harri = requests.post(url, data=data_harri)
-        print(f"Harri: {x_harri}")
-        
-        x_esp8266 = requests.post(url, data=data_esp8266)
-        print(f"ESP8266: {x_esp8266}")
+        for source in ["harri", "esp8266"]:
+            temp = round(random.uniform(10, 50), 1)
+
+            payload = make_request(temp, source)
+            r = requests.post(url, data=payload)
+
+            print(source, r.status_code, r.text)
 
     except Exception as e:
         print(e)
-    
+
     time.sleep(5)

@@ -5,37 +5,123 @@
 <head>
     <title>Lämmöt</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-</head>
-<body>
-<div class="container d-flex align-items-center justify-content-center">
-    <div class="mt-5 md-5">
-        <h2>Kuivurin status</h2>
 
-        <div class="row">
-            <div class="col-md-12 mt-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Viimeisin lämpötila</h5>
-                        {% for source, temp in latest_temps.items %}
-                            <h6>Lähde: {{ source }}</h6>
-                            <h3>Lämpötila: <span id="latest-temp-{{ source }}">{{ temp.temp }}</span></h3>
-                            <h6>Aika: <span id="latest-time-{{ source }}">{{ temp.time|date:"H:i:s" }}</span></h6>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <style>
+    body {
+        background: #f3f6fb;
+        color: #1f2937;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+
+    .app-header {
+        text-align: center;
+        margin-top: 40px;
+        margin-bottom: 30px;
+    }
+
+    .app-header h2 {
+        font-weight: 800;
+        color: #2563eb;
+    }
+
+    .card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+
+    .card-title {
+        color: #1d4ed8;
+        font-weight: 600;
+    }
+
+    .temp-block {
+        padding: 12px 0;
+    }
+
+    .temp-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #f59e0b;
+    }
+
+    .temp-source {
+        color: #2563eb;
+        font-weight: 600;
+    }
+
+    .timestamp {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    hr {
+        border-color: #e5e7eb;
+    }
+
+    iframe {
+        border-radius: 12px;
+        border: none;
+    }
+
+    .container {
+        max-width: 1000px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="app-header">
+        <h2>Kuivurin status</h2>
+        <p class="text-muted">Reaaliaikainen lämpötilaseuranta</p>
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+
+                    <h5 class="card-title">Viimeisimmät lämpötilat</h5>
+
+                    {% for source, temp in latest_temps.items %}
+                        <div class="temp-block">
+                            <div class="temp-source">Lähde: {{ source }}</div>
+                            <div class="temp-value">
+                                <span id="latest-temp-{{ source }}">{{ temp.temp }}</span> °C
+                            </div>
+                            <div class="timestamp">
+                                Aika: <span id="latest-time-{{ source }}">{{ temp.time|date:"H:i:s" }}</span>
+                            </div>
+                        </div>
+
+                        {% if not forloop.last %}
                             <hr>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-12 mt-4">
-                <div class="card">
-                    <div class="card-body">
-                        <iframe width="100%" height="600" src="{% url 'line_chart' %}"></iframe>
-                    </div>
+                        {% endif %}
+                    {% endfor %}
+
                 </div>
             </div>
         </div>
+
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Historia</h5>
+                    <iframe width="100%" height="600" src="{% url 'line_chart' %}"></iframe>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
+
 </body>
 </html>

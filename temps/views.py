@@ -1,14 +1,22 @@
 from django.shortcuts import render
 from .models import Temperature
 from django.views.generic import TemplateView
-from chartjs.views.lines import BaseLineChartView
-import datetime
 from django.views.decorators.csrf import csrf_exempt
+from chartjs.views.lines import BaseLineChartView
+from decouple import AutoConfig
+import os
+import datetime
 from django.http import JsonResponse
+from pathlib import Path
+import hashlib
+import hmac
+import time
 
 
 
-@csrf_exempt
+config = AutoConfig(search_path=".")
+API_SECRET = config("API_SECRET")
+
 def index(request):
     sources = Temperature.objects.values_list('source', flat=True).distinct()
     latest_temps = {}
@@ -17,14 +25,46 @@ def index(request):
         if latest_temp:
             latest_temps[source] = latest_temp
 
-    if request.method == "POST":
-        print(request.POST.get("temp"))
-        data = Temperature(temp=float(request.POST.get("temp")),time=datetime.datetime.now(),source=request.POST.get("source"))
-        data.save()
     return render(request, 'index.html', {'latest_temps': latest_temps})
 
+@csrf_exempt
+def api(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error"}, status=405)
     
+    expected_hash = hashlib.sha256()
 
+    temp = request.POST.get("temp")
+    source = request.POST.get("source")
+    timestamp = request.POST.get("timestamp")
+    client_hash = request.POST.get("hash")
+
+    if not all([temp, source, timestamp, client_hash]):
+        return JsonResponse({"status": "error", "message": "Missing fields"}, status=400)
+
+
+    ts = int(timestamp)
+    if abs(time.time() - ts) > 120:
+        return JsonResponse({"status": "error", "message": "Timestamp expired"}, status=403)
+    
+    payload = f"{temp}:{source}:{timestamp}".encode()
+
+    expected = hmac.new(
+        API_SECRET.encode(),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected, client_hash):
+        return JsonResponse({"status": "error", "message": "Invalid signature"}, status=403)
+
+    Temperature.objects.create(
+        temp=float(temp),
+        time=datetime.datetime.now(),
+        source=source
+    )
+
+    return JsonResponse({"status": "success"})
 
 class TempJsonView(BaseLineChartView):
     def get_labels(self):
