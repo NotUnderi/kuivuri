@@ -8,6 +8,11 @@
     </head>
     <body>
 
+        <div class="btn-group" role="group" aria-label="Data Type">
+            <button type="button" class="btn btn-info active" onclick="setDataType('temperature')">Temperature</button>
+            <button type="button" class="btn btn-info" onclick="setDataType('humidity')">Humidity</button>
+        </div>
+
         <div class="btn-group" role="group" aria-label="Time Range">
             <button type="button" class="btn btn-primary" onclick="updateChart(30)">Last 30 Minutes</button>
             <button type="button" class="btn btn-primary" onclick="updateChart(60)">Last 1 Hour</button>
@@ -24,9 +29,20 @@
 
         <script type="text/javascript">
             var chart;
+            var currentDataType = 'temperature';
+
+            function setDataType(dataType) {
+                currentDataType = dataType;
+                // Update button styling
+                document.querySelectorAll('[role="group"][aria-label="Data Type"] button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                updateChart(30);
+            }
 
             function updateChart(minutes) {
-                $.get('{% url "line_chart_json" %}', function(data) {
+                $.get('{% url "line_chart_json" %}?type=' + currentDataType, function(data) {
                     var filteredData = {
                         labels: [],
                         datasets: []

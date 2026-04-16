@@ -40,7 +40,17 @@
     }
 
     .temp-block {
-        padding: 12px 0;
+        padding: 16px 0;
+    }
+
+    .data-label {
+        color: #6b7280;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 8px;
+        display: block;
     }
 
     .temp-value {
@@ -49,14 +59,32 @@
         color: #f59e0b;
     }
 
-    .temp-source {
-        color: #2563eb;
+    .humidity-value {
+        color: #0ea5e9;
+        font-size: 1.5rem;
         font-weight: 600;
     }
 
-    .timestamp {
+    .humidity-label {
         color: #6b7280;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .temp-source {
+        color: #2563eb;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+
+    .timestamp {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-top: 8px;
+        font-style: italic;
     }
 
     hr {
@@ -91,14 +119,19 @@
 
                     <h5 class="card-title">Viimeisimmät lämpötilat</h5>
 
-                    {% for source, temp in latest_temps.items %}
+                    {% for source, latest_temp in latest_temps.items %}
                         <div class="temp-block">
-                            <div class="temp-source">Lähde: {{ source }}</div>
-                            <div class="temp-value">
-                                <span id="latest-temp-{{ source }}">{{ temp.temp }}</span> °C
+                            <div class="temp-source">{{ source }}</div> 
+                            <div>
+                                <span class="data-label">Poistoilman lämpötila:</span>
+                                <span class="temp-value" id="latest-temp-{{ source }}">{{ latest_temp.temp }}</span>°C
+                            </div>
+                            <div>
+                                <span class="humidity-label">Poistoilman kosteus:</span>
+                                <span class="humidity-value" id="latest-humidity-{{ source }}">{{ latest_temp.humidity }}</span>%
                             </div>
                             <div class="timestamp">
-                                Aika: <span id="latest-time-{{ source }}">{{ temp.time|date:"H:i:s" }}</span>
+                                {{ latest_temp.time|date:"H:i:s d.m.Y" }}
                             </div>
                         </div>
 

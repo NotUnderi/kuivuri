@@ -32,14 +32,13 @@ def api(request):
     if request.method != "POST":
         return JsonResponse({"status": "error"}, status=405)
     
-    expected_hash = hashlib.sha256()
-
     temp = request.POST.get("temp")
+    humidity = request.POST.get("humidity")
     source = request.POST.get("source")
     timestamp = request.POST.get("timestamp")
     client_hash = request.POST.get("hash")
 
-    if not all([temp, source, timestamp, client_hash]):
+    if not all([temp, humidity, source, timestamp, client_hash]):
         return JsonResponse({"status": "error", "message": "Missing fields"}, status=400)
 
 
@@ -47,7 +46,7 @@ def api(request):
     if abs(time.time() - ts) > 120:
         return JsonResponse({"status": "error", "message": "Timestamp expired"}, status=403)
     
-    payload = f"{temp}:{source}:{timestamp}".encode()
+    payload = f"{temp}:{humidity}:{source}:{timestamp}".encode()
 
     expected = hmac.new(
         API_SECRET.encode(),
@@ -58,8 +57,10 @@ def api(request):
     if not hmac.compare_digest(expected, client_hash):
         return JsonResponse({"status": "error", "message": "Invalid signature"}, status=403)
 
+
     Temperature.objects.create(
         temp=float(temp),
+        humidity=float(humidity),
         time=datetime.datetime.now(),
         source=source
     )
@@ -76,6 +77,7 @@ class TempJsonView(BaseLineChartView):
     
     def get_data(self):
         Temps = Temperature.objects.values("temp","time")
+        Humidities = Temperature.objects.values("humidity","time")
         data = [{'x':x["time"], 'y':x["temp"]} for x in Temps]
        
         return data
@@ -85,6 +87,7 @@ class TempJsonView(BaseLineChartView):
 line_chart = TemplateView.as_view(template_name='linechart.html')
 
 def line_chart_json(request):
+    data_type = request.GET.get('type', 'temperature')
     sources = Temperature.objects.values_list('source', flat=True).distinct()
     data = {
         'labels': [],
@@ -98,9 +101,18 @@ def line_chart_json(request):
 
     for source in sources:
         temperatures = Temperature.objects.filter(source=source).order_by('time')
+        
+        # Select data based on type
+        if data_type == 'humidity':
+            values = [temp.humidity for temp in temperatures]
+            label_suffix = ' (Humidity)'
+        else:
+            values = [temp.temp for temp in temperatures]
+            label_suffix = ' (Temp)'
+        
         dataset = {
-            'label': source,
-            'data': [temp.temp for temp in temperatures],
+            'label': source + label_suffix,
+            'data': values,
             'borderColor': colors.get(source, 'rgba(0, 0, 0, 1)'),  # Default to black if source not in colors
             'fill': False,
             'tension': 0.1,

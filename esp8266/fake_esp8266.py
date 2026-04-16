@@ -9,10 +9,10 @@ import os
 API_SECRET = os.getenv("API_SECRET")
 url = "http://localhost:8000/api/"
 
-def make_request(temp, source):
+def make_request(temp, humidity, source):
     timestamp = str(int(time.time()))
 
-    message = f"{temp}:{source}:{timestamp}"
+    message = f"{temp}:{humidity}:{source}:{timestamp}"
     signature = hmac.new(
         API_SECRET.encode(),
         message.encode(),
@@ -21,6 +21,7 @@ def make_request(temp, source):
 
     return {
         "temp": temp,
+        "humidity": humidity,
         "source": source,
         "timestamp": timestamp,
         "hash": signature
@@ -30,8 +31,8 @@ while True:
     try:
         for source in ["harri", "esp8266"]:
             temp = round(random.uniform(10, 50), 1)
-
-            payload = make_request(temp, source)
+            humidity = round(random.uniform(20, 80), 1)
+            payload = make_request(temp, humidity, source)
             r = requests.post(url, data=payload)
 
             print(source, r.status_code, r.text)
