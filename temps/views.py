@@ -2,12 +2,9 @@ from django.shortcuts import render
 from .models import Temperature
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import csrf_exempt
-from chartjs.views.lines import BaseLineChartView
 from decouple import AutoConfig
-import os
 import datetime
 from django.http import JsonResponse
-from pathlib import Path
 import hashlib
 import hmac
 import time
@@ -66,23 +63,6 @@ def api(request):
     )
 
     return JsonResponse({"status": "success"})
-
-class TempJsonView(BaseLineChartView):
-    def get_labels(self):
-        l = []
-        for i in Temperature.objects.values("time"):
-            l.append(i.get("time"))
-        return ["Temperature"]
-    
-    
-    def get_data(self):
-        Temps = Temperature.objects.values("temp","time")
-        Humidities = Temperature.objects.values("humidity","time")
-        data = [{'x':x["time"], 'y':x["temp"]} for x in Temps]
-       
-        return data
-
-
 
 line_chart = TemplateView.as_view(template_name='linechart.html')
 
