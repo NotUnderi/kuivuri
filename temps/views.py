@@ -68,39 +68,72 @@ line_chart = TemplateView.as_view(template_name='linechart.html')
 
 def line_chart_json(request):
     data_type = request.GET.get('type', 'temperature')
-    sources = Temperature.objects.values_list('source', flat=True).distinct()
+    minutes = int(request.GET.get('minutes', 480)) 
+    
     data = {
-        'labels': [],
-        'datasets': []
+        'labels': [],           #X axis : timestamps
+        'datasets': []          #Y axis : data
     }
+    
+    now = datetime.datetime.now()
+    cutoff = now - datetime.timedelta(minutes=minutes)
+    
+    temperatures = Temperature.objects.filter(
+        time__gte=cutoff,
+        time__isnull=False
+    ).values('source', 'temp', 'humidity', 'time').order_by('time')
+    
+    source_data = {}
+    for temp in temperatures:
+        source = temp['source']
+        if source not in source_data:
+            source_data[source] = []
+        source_data[source].append(temp)
+    
+    # Return empty data if no records found
+    if not source_data:
+        return JsonResponse(data)
 
-    colors = {
-        'harri': 'rgba(75, 192, 192, 1)',
-        'esp8266': 'rgba(192, 75, 75, 1)'
-    }
+    color_palette = [
+        'rgba(75, 192, 192, 1)',   # Teal
+        'rgba(192, 75, 75, 1)',    # Red
+        'rgba(75, 192, 75, 1)',    # Green
+        'rgba(192, 192, 75, 1)',   # Yellow
+        'rgba(192, 75, 192, 1)',   # Magenta
+        'rgba(75, 75, 192, 1)',    # Blue
+        'rgba(192, 128, 75, 1)',   # Orange
+        'rgba(128, 75, 192, 1)',   # Purple
+        'rgba(75, 128, 192, 1)',   # Light Blue
+        'rgba(192, 75, 128, 1)',   # Pink
+    ]
+    
+    sorted_sources = sorted(source_data.keys())
+    source_colors = {}
+    for i, source in enumerate(sorted_sources):
+        source_colors[source] = color_palette[i % len(color_palette)]
+    
+    default_visible_source = sorted_sources[0]
 
-    for source in sources:
-        temperatures = Temperature.objects.filter(source=source).order_by('time')
-        
-        # Select data based on type
+    for source, records in source_data.items():        
         if data_type == 'humidity':
-            values = [temp.humidity for temp in temperatures]
-            label_suffix = ' (Humidity)'
+            key = 'humidity'
+            label_suffix = ' (Kosteus)'
         else:
-            values = [temp.temp for temp in temperatures]
-            label_suffix = ' (Temp)'
+            key = 'temp'
+            label_suffix = ' (Lämpötila)'
+        values = [r[key] for r in records]
+
+        if not data['labels']:
+            data['labels'] = [r['time'].isoformat() for r in records]
         
         dataset = {
             'label': source + label_suffix,
             'data': values,
-            'borderColor': colors.get(source, 'rgba(0, 0, 0, 1)'),  # Default to black if source not in colors
+            'borderColor': source_colors[source],
             'fill': False,
             'tension': 0.1,
-            'hidden': source != 'harri'  
-
+            'hidden': source != default_visible_source
         }
-        if not data['labels']:
-            data['labels'] = [temp.time.isoformat() for temp in temperatures]
         data['datasets'].append(dataset)
 
     return JsonResponse(data)

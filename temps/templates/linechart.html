@@ -5,21 +5,67 @@
         <!--[if lte IE 8]>
             <script src="{% static 'js/excanvas.js' %}"></script>
         <![endif]-->
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            html, body {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+            body {
+                display: flex;
+                flex-direction: column;
+                background: #f8f9fa;
+            }
+            .controls {
+                flex-shrink: 0;
+                padding: 12px;
+                background: #ffffff;
+                border-bottom: 1px solid #dee2e6;
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            .btn-group {
+                display: flex;
+                gap: 5px;
+            }
+            .chart-container {
+                flex: 1;
+                position: relative;
+                background: white;
+                margin: 5px;
+                border-radius: 4px;
+                min-height: 0;
+            }
+            #myChart {
+                max-width: 100%;
+                max-height: 100%;
+            }
+        </style>
     </head>
     <body>
 
-        <div class="btn-group" role="group" aria-label="Data Type">
-            <button type="button" class="btn btn-info active" onclick="setDataType('temperature')">Temperature</button>
-            <button type="button" class="btn btn-info" onclick="setDataType('humidity')">Humidity</button>
+        <div class="controls">
+            <div class="btn-group" role="group" aria-label="Data Type">
+                <button type="button" class="btn btn-info active" onclick="setDataType('temperature')">Lämpötila</button>
+                <button type="button" class="btn btn-info" onclick="setDataType('humidity')">Kosteus</button>
+            </div>
+
+            <div class="btn-group" role="group" aria-label="Time Range">
+                <button type="button" class="btn btn-primary" onclick="updateChart(30)">30 min</button>
+                <button type="button" class="btn btn-primary" onclick="updateChart(60)">1h</button>
+                <button type="button" class="btn btn-primary" onclick="updateChart(480)">8h</button>
+            </div>
         </div>
 
-        <div class="btn-group" role="group" aria-label="Time Range">
-            <button type="button" class="btn btn-primary" onclick="updateChart(30)">Last 30 Minutes</button>
-            <button type="button" class="btn btn-primary" onclick="updateChart(60)">Last 1 Hour</button>
-            <button type="button" class="btn btn-primary" onclick="updateChart(480)">Last 8 Hours</button>
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
         </div>
-
-        <canvas width="100%" height="100%" id="myChart"></canvas>
 
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -30,6 +76,7 @@
         <script type="text/javascript">
             var chart;
             var currentDataType = 'temperature';
+            var currentMinutes = 30; // Default to 30 minutes
 
             function setDataType(dataType) {
                 currentDataType = dataType;
@@ -38,39 +85,12 @@
                     btn.classList.remove('active');
                 });
                 event.target.classList.add('active');
-                updateChart(30);
+                updateChart(currentMinutes);
             }
 
             function updateChart(minutes) {
-                $.get('{% url "line_chart_json" %}?type=' + currentDataType, function(data) {
-                    var filteredData = {
-                        labels: [],
-                        datasets: []
-                    };
-
-                    var now = new Date();
-                    var cutoff = new Date(now.getTime() - minutes * 60000);
-
-                    filteredData.labels = data.labels.filter(function(label) {
-                        var time = new Date(label);
-                        return time >= cutoff;
-                    });
-
-                    data.datasets.forEach(function(dataset) {
-                        var filteredDataset = {
-                            label: dataset.label,
-                            data: [],
-                            fill: false,
-                            borderColor: dataset.borderColor,
-                            tension: 0.1,
-                            hidden: dataset.hidden
-                        };
-
-                        filteredDataset.data = dataset.data.slice(-filteredData.labels.length);
-
-                        filteredData.datasets.push(filteredDataset);
-                    });
-
+                currentMinutes = minutes; // Store current minutes
+                $.get('{% url "line_chart_json" %}?type=' + currentDataType + '&minutes=' + minutes, function(data) {
                     if (chart) {
                         chart.destroy();
                     }
@@ -79,8 +99,14 @@
 
                     chart = new Chart(ctx, {
                         type: 'line',
-                        data: filteredData,
+                        data: data,
                         options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                intersect: false,
+                                mode: 'index'
+                            },
                             scales: {
                                 x: {
                                     type: "time",
